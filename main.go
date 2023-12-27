@@ -17,6 +17,10 @@ func main() {
 
 	router := chi.NewRouter()
 
+	routerAPI := chi.NewRouter()
+
+	router.Mount("/api/", routerAPI)
+
 	routerCors := middlewareCors(router)
 	// router.Handle(pattern string, handler http.Handler)
 
@@ -30,11 +34,11 @@ func main() {
 		http.StripPrefix("/app", cfg.trackRequestWrapper(http.FileServer(http.Dir(filepathRoot)))),
 	)
 
-	router.Get("/healthz", readinessHandler)
+	routerAPI.Get("/healthz", readinessHandler)
 
-	router.Get("/metrics", cfg.printRequestsHandler)
+	routerAPI.Get("/metrics", cfg.printRequestsHandler)
 
-	router.HandleFunc("/reset", cfg.resetHandler)
+	routerAPI.HandleFunc("/reset", cfg.resetHandler)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
