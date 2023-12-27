@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -27,11 +28,28 @@ func (c *Config) resetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // displays what the request counter is currently at
+// func (c *Config) printRequestsHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+// 	w.WriteHeader(http.StatusOK)
+// 	num := strconv.Itoa(c.requestCounter)
+// 	str := "Hits: " + num
+// 	w.Write([]byte(str))
+// }
+
+// displays what the request counter is currently at
 func (c *Config) printRequestsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	num := strconv.Itoa(c.requestCounter)
-	str := "Hits: " + num
+	str := fmt.Sprintf(`
+    <html>
+
+    <body>
+        <h1>Welcome, Chirpy Admin</h1>
+        <p>Chirpy has been visited %d times!</p>
+    </body>
+
+    </html>
+    `, c.requestCounter)
 	w.Write([]byte(str))
 }
 

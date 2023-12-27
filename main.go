@@ -16,14 +16,14 @@ func main() {
 	const port = "8080"
 
 	router := chi.NewRouter()
-
 	routerAPI := chi.NewRouter()
+	routerAdmin := chi.NewRouter()
 
 	router.Mount("/api/", routerAPI)
+	router.Mount("/admin/", routerAdmin)
 
 	routerCors := middlewareCors(router)
 	// router.Handle(pattern string, handler http.Handler)
-
 	router.Handle(
 		"/app",
 		http.StripPrefix("/app", cfg.trackRequestWrapper(http.FileServer(http.Dir(filepathRoot)))),
@@ -35,10 +35,9 @@ func main() {
 	)
 
 	routerAPI.Get("/healthz", readinessHandler)
-
-	routerAPI.Get("/metrics", cfg.printRequestsHandler)
-
 	routerAPI.HandleFunc("/reset", cfg.resetHandler)
+
+	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
