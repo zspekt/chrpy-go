@@ -36,6 +36,7 @@ func main() {
 
 	routerAPI.Get("/healthz", readinessHandler)
 	routerAPI.HandleFunc("/reset", cfg.resetHandler)
+	routerAPI.Post("/validate_chirp", lengthValidationHandler)
 
 	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 
