@@ -8,8 +8,6 @@ import (
 )
 
 func lengthValidationHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	type response struct {
 		Valid bool `json:"valid"`
 	}
@@ -24,16 +22,13 @@ func lengthValidationHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&decdRequest)
 	if err != nil {
 		log.Printf("Error decoding parameters: %s", err)
-		w.WriteHeader(500)
+		respondWithError(w, 500, "\nServer error --> Error decoding parameters\n")
 		return
 	}
 
 	if len(decdRequest.Body) > 140 {
 		log.Println("Exceeds 140 characters.")
-		w.WriteHeader(400)
-
-		// :   bytesResp := []byte{"poop"}
-		w.Write([]byte("\"error\": \"Something went wrong\""))
+		respondWithError(w, 400, "\"error\": \"Exceeds 140 characters.\"")
 		return
 	}
 
@@ -41,14 +36,7 @@ func lengthValidationHandler(w http.ResponseWriter, r *http.Request) {
 		Valid: true,
 	}
 
-	toWrite, err := json.Marshal(resp)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	w.WriteHeader(200)
-	w.Write(toWrite)
+	respondWithJSON(w, 200, resp)
 
 	log.Println("Chirp does not exceed 140 characters. Well done.")
 }
