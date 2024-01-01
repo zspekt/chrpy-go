@@ -18,12 +18,10 @@ func lengthValidationHandler(w http.ResponseWriter, r *http.Request) {
 
 	decdRequest := decodeBody{}
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&decdRequest)
+	err := decodeJson[decodeBody](r.Body, &decdRequest)
 	if err != nil {
-		log.Printf("Error decoding parameters: %s", err)
+		log.Println(err)
 		respondWithError(w, 500, "\nServer error --> Error decoding parameters\n")
-		return
 	}
 
 	if len(decdRequest.Body) > 140 {
