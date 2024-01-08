@@ -45,7 +45,7 @@ func (c *Config) printRequestsHandler(w http.ResponseWriter, r *http.Request) {
 
     <body>
         <h1>Welcome, Chirpy Admin</h1>
-        <p>Chirpy has been visited %d times!</p>
+        <p>Chirpy has been visited 2 times!</p>
     </body>
 
     </html>

@@ -5,13 +5,69 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
+
+func profaneCheck(str *string, curseWords []string, censored string) bool {
+	// censored := "****"
+	slice := strings.Split(*str, " ")
+	var cursedWordPresent bool
+
+	curseWordsMap := make(map[string]bool, len(curseWords))
+	for _, curse := range curseWords {
+		curseWordsMap[strings.ToLower(curse)] = true
+	}
+
+	for i, v := range slice {
+		if curseWordsMap[strings.ToLower(v)] {
+			slice[i] = censored
+			cursedWordPresent = true
+		}
+	}
+
+	*str = strings.Join(slice, " ")
+	return cursedWordPresent
+}
+
+func profaneHandler(w http.ResponseWriter, r *http.Request) {
+	type response struct {
+		CleanedBody string `json:"cleaned_body"`
+	}
+	type decodeBody struct {
+		Body string `json:"body"`
+	}
+
+	curseWords := []string{"kerfuffle", "sharbert", "fornax"}
+
+	decdRequest := decodeBody{}
+
+	err := decodeJson[decodeBody](r.Body, &decdRequest)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, 500, "\nServer error --> Error decoding parameters\n")
+	}
+
+	if len(decdRequest.Body) > 140 {
+		log.Println("Exceeds 140 characters.")
+		respondWithError(w, 400, "\"error\": \"Exceeds 140 characters.\"")
+		return
+	}
+
+	present := profaneCheck(&decdRequest.Body, curseWords, "****")
+
+	resp := response{
+		CleanedBody: decdRequest.Body,
+	}
+
+	respondWithJSON(w, 200, resp)
+
+	log.Printf("bad words present: %v\n", present)
+}
 
 func lengthValidationHandler(w http.ResponseWriter, r *http.Request) {
 	type response struct {
 		Valid bool `json:"valid"`
 	}
-
 	type decodeBody struct {
 		Body string `json:"body"`
 	}
