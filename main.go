@@ -5,10 +5,23 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+
+	"github.com/zspekt/chrpy-go/internal/database"
 )
 
-var cfg = Config{
-	requestCounter: 0,
+var (
+	cfg Config = Config{
+		requestCounter: 0,
+	}
+	DATAB *database.DB
+)
+
+func init() {
+	var errr error
+	DATAB, errr = database.NewDB("./database.json")
+	if errr != nil {
+		log.Fatal(errr)
+	}
 }
 
 func main() {

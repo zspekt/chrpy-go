@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -39,9 +40,11 @@ func chirpsHandler(w http.ResponseWriter, r *http.Request) {
 
 	decdRequest := decodeBody{}
 
+	fmt.Println("\n\t\tRIGHT BEFORE DECODE JSON\n")
 	err := decodeJson[decodeBody](r.Body, &decdRequest)
+	fmt.Println("\n\t\tAFFTEEEEER DECODE JSON\n")
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		respondWithError(w, 500, "\nServer error --> Error decoding parameters\n")
 	}
 
@@ -52,20 +55,24 @@ func chirpsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	curseWords := []string{"kerfuffle", "sharbert", "fornax"}
-	cursePresent := profaneCheck(&decdRequest.Body, curseWords, "****")
+	profaneCheck(&decdRequest.Body, curseWords, "****")
 
-  chirp := Chirp{
-    Body: decdRequest.Body,
-    id: 
-  }
+	// id, err := db.GetIdCount()
+	// if err != nil {
+	//   log.Println(err)
+	//   return
+	// }
 
-	resp := response{
-		CleanedBody: decdRequest.Body,
+	fmt.Println("\n\t\tRIGHT BEFORE CREATECHIRP CALL\n\n")
+	chirp, err := DATAB.CreateChirp(decdRequest.Body)
+	if err != nil {
+		log.Println(err)
 	}
+	fmt.Println("\n\t\tAFTERRRR CREATECHIRP CALL\n\n")
 
-	respondWithJSON(w, 201, resp)
+	respondWithJSON(w, 201, chirp)
 
-	log.Printf("bad words present: %v\n", cursePresent)
+	// log.Printf("bad words present: %v\n", cursePresent)
 }
 
 func sendHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +100,25 @@ func sendHandler(w http.ResponseWriter, r *http.Request) {
 	toWrite, err := json.Marshal(resp)
 	w.Write(toWrite)
 }
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ */
 
 // func lengthValidationHandler(w http.ResponseWriter, r *http.Request) {
 // 	type response struct {
