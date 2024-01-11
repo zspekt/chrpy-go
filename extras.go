@@ -40,9 +40,9 @@ func chirpsHandler(w http.ResponseWriter, r *http.Request) {
 
 	decdRequest := decodeBody{}
 
-	fmt.Println("\n\t\tRIGHT BEFORE DECODE JSON\n")
+	// fmt.Println("\n\t\tRIGHT BEFORE DECODE JSON\n")
 	err := decodeJson[decodeBody](r.Body, &decdRequest)
-	fmt.Println("\n\t\tAFFTEEEEER DECODE JSON\n")
+	// fmt.Println("\n\t\tAFFTEEEEER DECODE JSON\n")
 	if err != nil {
 		log.Fatal(err)
 		respondWithError(w, 500, "\nServer error --> Error decoding parameters\n")
@@ -63,12 +63,14 @@ func chirpsHandler(w http.ResponseWriter, r *http.Request) {
 	//   return
 	// }
 
-	fmt.Println("\n\t\tRIGHT BEFORE CREATECHIRP CALL\n\n")
+	// fmt.Println("\n\t\tRIGHT BEFORE CREATECHIRP CALL\n\n")
 	chirp, err := DATAB.CreateChirp(decdRequest.Body)
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Println("\n\t\tAFTERRRR CREATECHIRP CALL\n\n")
+	// fmt.Println("\n\t\tAFTERRRR CREATECHIRP CALL\n\n")
+
+	fmt.Println(chirp)
 
 	respondWithJSON(w, 201, chirp)
 

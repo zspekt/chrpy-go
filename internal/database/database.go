@@ -79,7 +79,7 @@ func MarshalAndWrite[T any](structure T, fPath string) error {
 func (db *DB) CreateChirp(body string) (Chirp, error) {
 	DBStruct := DBStructure{}
 
-	DBStruct.Chirps = make(map[int]Chirp)
+	DBStruct.Chirps = map[int]Chirp{}
 
 	// locking access to the file so no one writes to it, or reads before
 	// we are done updating it
@@ -87,7 +87,7 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 	UnmarshalToStruct[DBStructure](&DBStruct, db.path)
 
-	newChirpId := len(DBStruct.Chirps) + 1
+	newChirpId := 1
 	newChirp := Chirp{
 		Body: body,
 		Id:   newChirpId,

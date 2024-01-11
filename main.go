@@ -13,7 +13,8 @@ var (
 	cfg Config = Config{
 		requestCounter: 0,
 	}
-	DATAB *database.DB
+	DATAB     *database.DB
+	IdCounter int
 )
 
 func init() {
