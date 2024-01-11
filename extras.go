@@ -7,10 +7,11 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/zspekt/chrpy-go/internal/database"
 )
 
 func profaneCheck(str *string, curseWords []string, censored string) bool {
-	// censored := "****"
 	slice := strings.Split(*str, " ")
 	var cursedWordPresent bool
 
@@ -30,7 +31,7 @@ func profaneCheck(str *string, curseWords []string, censored string) bool {
 	return cursedWordPresent
 }
 
-func chirpsHandler(w http.ResponseWriter, r *http.Request) {
+func chirpsPostHandler(w http.ResponseWriter, r *http.Request) {
 	type response struct {
 		CleanedBody string `json:"cleaned_body"`
 	}
@@ -38,10 +39,16 @@ func chirpsHandler(w http.ResponseWriter, r *http.Request) {
 		Body string `json:"body"`
 	}
 
+	db, err := database.NewDB("./database.json")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	decdRequest := decodeBody{}
 
 	// fmt.Println("\n\t\tRIGHT BEFORE DECODE JSON\n")
-	err := decodeJson[decodeBody](r.Body, &decdRequest)
+	err = decodeJson[decodeBody](r.Body, &decdRequest)
 	// fmt.Println("\n\t\tAFFTEEEEER DECODE JSON\n")
 	if err != nil {
 		log.Fatal(err)
@@ -64,7 +71,7 @@ func chirpsHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// fmt.Println("\n\t\tRIGHT BEFORE CREATECHIRP CALL\n\n")
-	chirp, err := DATAB.CreateChirp(decdRequest.Body)
+	chirp, err := db.CreateChirp(decdRequest.Body)
 	if err != nil {
 		log.Println(err)
 	}
@@ -75,6 +82,27 @@ func chirpsHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 201, chirp)
 
 	// log.Printf("bad words present: %v\n", cursePresent)
+}
+
+func chirpsGetHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := database.NewDB("./database.json")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// DBStruct, err := db.LoadDB()
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return
+	// }
+
+	chirps, err := db.GetChirps()
+	if err != nil {
+		return
+	}
+
+	respondWithJSON(w, 200, chirps)
 }
 
 func sendHandler(w http.ResponseWriter, r *http.Request) {

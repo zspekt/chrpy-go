@@ -5,24 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-
-	"github.com/zspekt/chrpy-go/internal/database"
 )
 
-var (
-	cfg Config = Config{
-		requestCounter: 0,
-	}
-	DATAB     *database.DB
-	IdCounter int
-)
-
-func init() {
-	var errr error
-	DATAB, errr = database.NewDB("./database.json")
-	if errr != nil {
-		log.Fatal(errr)
-	}
+var cfg Config = Config{
+	requestCounter: 0,
 }
 
 func main() {
@@ -50,7 +36,8 @@ func main() {
 
 	routerAPI.Get("/healthz", readinessHandler)
 	routerAPI.HandleFunc("/reset", cfg.resetHandler)
-	routerAPI.Post("/chirps", chirpsHandler)
+	routerAPI.Post("/chirps", chirpsPostHandler)
+	routerAPI.Get("/chirps", chirpsGetHandler)
 
 	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 

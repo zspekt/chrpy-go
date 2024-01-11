@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -21,6 +22,8 @@ type DB struct {
 type DBStructure struct {
 	Chirps map[int]Chirp `json:"chirps"`
 }
+
+var IdCount int = 0
 
 // NewDB creates a new database connection
 // and creates the database file if it doesn't exist
@@ -87,13 +90,19 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 	UnmarshalToStruct[DBStructure](&DBStruct, db.path)
 
-	newChirpId := 1
+	IdCount++
+
 	newChirp := Chirp{
 		Body: body,
-		Id:   newChirpId,
+		Id:   IdCount,
 	}
 
-	DBStruct.Chirps[newChirpId] = newChirp
+	DBStruct.Chirps[IdCount] = newChirp
+	fmt.Printf(
+		"\n\n\tCreated new chirp with ID -> %v\n\t\tBody -> %v\n\n",
+		newChirp.Id,
+		newChirp.Body,
+	)
 
 	err := MarshalAndWrite[DBStructure](DBStruct, db.path)
 	if err != nil {
@@ -151,7 +160,7 @@ func (db *DB) ensureDB() error {
 }
 
 // loadDB reads the database file into memory
-func (db *DB) loadDB() (DBStructure, error) {
+func (db *DB) LoadDB() (DBStructure, error) {
 	var DBStruct DBStructure
 
 	err := UnmarshalToStruct[DBStructure](&DBStruct, db.path)
@@ -171,13 +180,4 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 		return err
 	}
 	return nil
-}
-
-func (db *DB) GetIdCount() (int, error) {
-	d, err := db.loadDB()
-	if err != nil {
-		return 0, err
-	}
-
-	return len(d.Chirps), nil
 }
