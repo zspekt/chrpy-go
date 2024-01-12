@@ -6,7 +6,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/zspekt/chrpy-go/internal/database"
 )
@@ -129,6 +132,35 @@ func sendHandler(w http.ResponseWriter, r *http.Request) {
 
 	toWrite, err := json.Marshal(resp)
 	w.Write(toWrite)
+}
+
+func getChirpByID(w http.ResponseWriter, r *http.Request) {
+	db, err := database.NewDB("./database.json")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var chirpsMap database.DBStructure
+
+	chirpsMap, err = db.LoadDB()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	id, err := strconv.Atoi(chi.URLParam(r, "*"))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	if chirp, ok := chirpsMap.Chirps[id]; ok {
+		respondWithJSON(w, 200, chirp)
+		return
+	}
+
+	respondWithError(w, 404, "404 Not found")
 }
 
 /*

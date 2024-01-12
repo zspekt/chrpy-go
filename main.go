@@ -38,6 +38,7 @@ func main() {
 	routerAPI.HandleFunc("/reset", cfg.resetHandler)
 	routerAPI.Post("/chirps", chirpsPostHandler)
 	routerAPI.Get("/chirps", chirpsGetHandler)
+	routerAPI.Get("/chirps/*", getChirpByID)
 
 	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 
