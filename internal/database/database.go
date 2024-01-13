@@ -9,21 +9,10 @@ import (
 	"sync"
 )
 
-type Chirp struct {
-	Body string `json:"body"`
-	Id   int    `json:"id"`
-}
-
-type DB struct {
-	path  string
-	mutex *sync.RWMutex
-}
-
-type DBStructure struct {
-	Chirps map[int]Chirp `json:"chirps"`
-}
-
-var IdCount int = 0
+var (
+	ChirpIDCount int = 0
+	UserIDCount  int = 0
+)
 
 // NewDB creates a new database connection
 // and creates the database file if it doesn't exist
@@ -48,16 +37,24 @@ func NewDB(path string) (*DB, error) {
 	}, nil
 }
 
+// Reads the file at fPath, assumes json content, and unmarshalls it to
+// the provided memory address, expecting a struct of type T.
 func UnmarshalToStruct[T any](structure *T, fPath string) error {
 	fileBytes, err := os.ReadFile(fPath)
 	if err != nil {
+		log.Println(err)
 		return err
+	}
+
+	if !json.Valid(fileBytes) {
+		log.Println("\n", fPath, "does not contain valid JSON data.")
+		return nil
 	}
 
 	// unmarshalling into the provided struct
 	err = json.Unmarshal(fileBytes, structure)
 	if err != nil {
-		log.Println(err)
+		panic(err)
 		return err
 	}
 	return nil
@@ -90,14 +87,14 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 	UnmarshalToStruct[DBStructure](&DBStruct, db.path)
 
-	IdCount++
+	ChirpIDCount++
 
 	newChirp := Chirp{
 		Body: body,
-		Id:   IdCount,
+		Id:   ChirpIDCount,
 	}
 
-	DBStruct.Chirps[IdCount] = newChirp
+	DBStruct.Chirps[ChirpIDCount] = newChirp
 	fmt.Printf(
 		"\n\n\tCreated new chirp with ID -> %v\n\t\tBody -> %v\n\n",
 		newChirp.Id,
@@ -180,4 +177,43 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 		return err
 	}
 	return nil
+}
+
+func (db *DB) CreateUser(email string) (User, error) {
+	fmt.Printf("\n\nTHIS IS PROVIDED EMAIL STRING TO CREATEUSER: --> %v\n\n", email)
+	DBStruct := DBStructure{}
+
+	DBStruct.Users = map[int]User{}
+
+	// locking access to the file so no one writes to it, or reads before
+	// we are done updating it
+	db.mutex.Lock()
+
+	err := UnmarshalToStruct[DBStructure](&DBStruct, db.path)
+	if err != nil {
+		log.Println(err)
+		return User{}, err
+	}
+
+	UserIDCount++
+
+	newUser := User{
+		Email: email,
+		Id:    UserIDCount,
+	}
+
+	DBStruct.Users[UserIDCount] = newUser
+	fmt.Printf(
+		"\n\n\tCreated new User with ID -> %v\n\t\tBody -> %v\n\n",
+		newUser.Id,
+		newUser.Email,
+	)
+
+	err = MarshalAndWrite[DBStructure](DBStruct, db.path)
+	if err != nil {
+		return User{}, err
+	}
+
+	db.mutex.Unlock()
+	return newUser, nil
 }

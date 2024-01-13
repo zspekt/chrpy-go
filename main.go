@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// me when when i dont know how to handle these things
 var cfg Config = Config{
 	requestCounter: 0,
 }
@@ -34,11 +35,15 @@ func main() {
 		http.StripPrefix("/app", cfg.trackRequestWrapper(http.FileServer(http.Dir(filepathRoot)))),
 	)
 
-	routerAPI.Get("/healthz", readinessHandler)
 	routerAPI.HandleFunc("/reset", cfg.resetHandler)
-	routerAPI.Post("/chirps", chirpsPostHandler)
+
+	routerAPI.Get("/healthz", readinessHandler)
+
 	routerAPI.Get("/chirps", chirpsGetHandler)
-	routerAPI.Get("/chirps/*", getChirpByID)
+	routerAPI.Get("/chirps/*", chirpsGetByIDHandler)
+	routerAPI.Post("/chirps", chirpsPostHandler)
+
+	routerAPI.Post("/users", usersPostHandler)
 
 	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 

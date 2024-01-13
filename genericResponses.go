@@ -33,9 +33,9 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(jsonPayload)
 }
 
-func decodeJson[T any](r io.ReadCloser, sillycat *T) error {
+func decodeJson[T any](r io.Reader, st *T) error {
 	decoder := json.NewDecoder(r)
-	err := decoder.Decode(sillycat)
+	err := decoder.Decode(st)
 	if err != nil {
 		return err
 	}
