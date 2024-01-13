@@ -104,23 +104,3 @@ func chirpsGetByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	respondWithError(w, 404, "404 Not found")
 }
-
-func usersPostHandler(w http.ResponseWriter, r *http.Request) {
-	decdRequest := decodeUserPost{}
-
-	db, err := database.NewDB("./database.json")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	decodeJson(r.Body, &decdRequest)
-
-	resp, err := db.CreateUser(decdRequest.Email)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	respondWithJSON(w, 201, resp)
-}

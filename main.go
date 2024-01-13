@@ -39,11 +39,14 @@ func main() {
 
 	routerAPI.Get("/healthz", readinessHandler)
 
+	// chirp handlers
 	routerAPI.Get("/chirps", chirpsGetHandler)
 	routerAPI.Get("/chirps/*", chirpsGetByIDHandler)
 	routerAPI.Post("/chirps", chirpsPostHandler)
 
+	// user handlers
 	routerAPI.Post("/users", usersPostHandler)
+	routerAPI.Post("/login", usersAuthHandler)
 
 	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 

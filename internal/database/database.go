@@ -179,11 +179,10 @@ func (db *DB) writeDB(dbStructure DBStructure) error {
 	return nil
 }
 
-func (db *DB) CreateUser(email string) (User, error) {
-	fmt.Printf("\n\nTHIS IS PROVIDED EMAIL STRING TO CREATEUSER: --> %v\n\n", email)
+func (db *DB) CreateUser(email string, password string) (User, error) {
 	DBStruct := DBStructure{}
 
-	DBStruct.Users = map[int]User{}
+	DBStruct.Users = map[string]User{}
 
 	// locking access to the file so no one writes to it, or reads before
 	// we are done updating it
@@ -198,15 +197,17 @@ func (db *DB) CreateUser(email string) (User, error) {
 	UserIDCount++
 
 	newUser := User{
-		Email: email,
-		Id:    UserIDCount,
+		Id:       UserIDCount,
+		Email:    email,
+		Password: password,
 	}
 
-	DBStruct.Users[UserIDCount] = newUser
+	DBStruct.Users[email] = newUser
 	fmt.Printf(
-		"\n\n\tCreated new User with ID -> %v\n\t\tBody -> %v\n\n",
+		"\n\n\tCreated new User with ID -> %v\n\t\tBody -> %v\n\tPassword -> %v\n\n",
 		newUser.Id,
 		newUser.Email,
+		newUser.Password,
 	)
 
 	err = MarshalAndWrite[DBStructure](DBStruct, db.path)

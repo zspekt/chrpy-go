@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -29,7 +28,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 		return
 	}
 
-	fmt.Println(string(jsonPayload))
+	// fmt.Println(string(jsonPayload))
 	w.Write(jsonPayload)
 }
 
