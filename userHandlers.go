@@ -39,20 +39,6 @@ func usersPostHandler(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 201, resp)
 }
 
-/*
-
-
-
-
-
-
-
-
-
-
-
- */
-
 func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 	decdRequest := decodeUserPost{}
 
@@ -91,19 +77,6 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, 200, resp)
 }
-
-/*
-
-
-
-
-
-
-
-
-
-
- */
 
 func hashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
