@@ -7,10 +7,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/zspekt/chrpy-go/internal/database"
+	jwtwrappers "github.com/zspekt/chrpy-go/internal/jwtWrappers"
 )
 
 func usersPostHandler(w http.ResponseWriter, r *http.Request) {
-	decdRequest := decodeUserPost{}
+	decdRequest := decodeUserLogin{}
 
 	db, err := database.NewDB("./database.json")
 	if err != nil {
@@ -40,7 +41,7 @@ func usersPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
-	decdRequest := decodeUserPost{}
+	decdRequest := decodeUserLogin{}
 
 	resp := userPostResp{}
 
@@ -70,19 +71,25 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	jwtCfg := &jwtwrappers.JWTRequestConfig{
+		UserID:           DBStruct.Users[requestedUser].Id,
+		ExpiresInSeconds: decdRequest.ExpiresInSeconds,
+	}
+
+	signedToken, err := jwtwrappers.CreateToken(jwtCfg)
+	if err != nil {
+		log.Println("Error creating and signing token -> ", err)
+		return
+	}
+
 	resp = userPostResp{
 		Id:    DBStruct.Users[requestedUser].Id,
 		Email: requestedUser,
+		Token: signedToken,
 	}
 
 	respondWithJSON(w, 200, resp)
 }
 
-func hashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Printf("Error hashing password --> %v\n", err)
-		return "", err
-	}
-	return string(hash), nil
+func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 }

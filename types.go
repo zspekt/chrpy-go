@@ -5,12 +5,18 @@ type decodeChirpPost struct {
 }
 
 type decodeUserPost struct {
-	Email           string `json:"email"`
-	Password        string `json:"password"`
-	ExpiresInSeonds int    `json:"expires_in_seonds"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type decodeUserLogin struct {
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	ExpiresInSeconds int    `json:"expires_in_seonds"`
 }
 
 type userPostResp struct {
 	Id    int    `json:"id"`
 	Email string `json:"email"`
+	Token string `json:"token"`
 }

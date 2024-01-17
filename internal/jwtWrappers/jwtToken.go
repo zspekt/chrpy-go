@@ -1,4 +1,4 @@
-package jwt
+package jwtwrappers
 
 import (
 	"log"
@@ -23,11 +23,11 @@ func init() {
 	log.Println("jwtSecret has been set...")
 }
 
-func createToken() (string, error) {
+func CreateToken(cfg *JWTRequestConfig) (string, error) {
 	// placeholders
 	var (
-		expires_in_seconds int    = 10
-		userId             int    = 5
+		expires_in_seconds int    = cfg.ExpiresInSeconds
+		userId             int    = cfg.UserID
 		issuer             string = "chirpy"
 	)
 
@@ -42,9 +42,9 @@ func createToken() (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString(jwtSecret)
+	signedToken, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		return "", err
 	}
 	return signedToken, nil
