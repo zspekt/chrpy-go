@@ -18,5 +18,10 @@ type decodeUserLogin struct {
 type userPostResp struct {
 	Id    int    `json:"id"`
 	Email string `json:"email"`
+}
+
+type userLoginResp struct {
+	Id    int    `json:"id"`
+	Email string `json:"email"`
 	Token string `json:"token"`
 }

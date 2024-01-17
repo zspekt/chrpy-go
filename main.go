@@ -48,6 +48,8 @@ func main() {
 	routerAPI.Post("/users", usersPostHandler)
 	routerAPI.Post("/login", usersAuthHandler)
 
+	routerAPI.Put("/users", usersEditHandler)
+
 	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 
 	srv := &http.Server{

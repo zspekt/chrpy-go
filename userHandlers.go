@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -15,7 +16,7 @@ func usersPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := database.NewDB("./database.json")
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		return
 	}
 
@@ -43,11 +44,11 @@ func usersPostHandler(w http.ResponseWriter, r *http.Request) {
 func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 	decdRequest := decodeUserLogin{}
 
-	resp := userPostResp{}
+	resp := userLoginResp{}
 
 	db, err := database.NewDB("./database.json")
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 		return
 	}
 
@@ -82,7 +83,7 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp = userPostResp{
+	resp = userLoginResp{
 		Id:    DBStruct.Users[requestedUser].Id,
 		Email: requestedUser,
 		Token: signedToken,
@@ -92,4 +93,17 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersEditHandler(w http.ResponseWriter, r *http.Request) {
+	token, err := jwtwrappers.GetTokenFromHeader(r)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	claims, err := jwtwrappers.ValidateAndReturn(token)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	fmt.Printf("\nPrinting claims...\n%v\t%v\t%v", claims.Issuer, claims.IssuedAt, claims.ExpiresAt)
 }
