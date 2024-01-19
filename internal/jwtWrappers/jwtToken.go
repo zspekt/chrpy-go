@@ -27,13 +27,19 @@ func init() {
 }
 
 func CreateToken(cfg *JWTRequestConfig) (string, error) {
+	if cfg.ExpiresInSeconds <= 0 {
+		cfg.ExpiresInSeconds = 86400
+	}
+
 	var (
 		expires_in_seconds int       = cfg.ExpiresInSeconds
 		userId             int       = cfg.UserID
 		issuer             string    = "chirpy"
-		issuedAt           time.Time = time.Now()
-		expiresAt          time.Time = issuedAt.Add(time.Duration(expires_in_seconds))
+		issuedAt           time.Time = time.Now().UTC()
+		expiresAt          time.Time = issuedAt.Add(time.Duration(expires_in_seconds) * time.Second)
 	)
+
+	fmt.Printf("\nissuedAt -> %v\nexpiresAt -> %v", issuedAt, expiresAt)
 
 	claims := jwt.RegisteredClaims{
 		Issuer:    issuer,
@@ -45,14 +51,15 @@ func CreateToken(cfg *JWTRequestConfig) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		log.Fatal(err)
-		// return "", err
+		log.Println("jwtToken LINE 48")
+		return "", err
 	}
-	fmt.Printf("\n\nCREATED TOKEN: %v\n\n", signedToken)
+	// fmt.Printf("\n\nCREATED TOKEN: %v\n\n", signedToken)
 	return signedToken, nil
 }
 
 func ValidateAndReturn(token string) (jwt.RegisteredClaims, error) {
+	// fmt.Println("jwtSecret right here -> ", jwtSecret)
 	claims := &jwt.RegisteredClaims{}
 
 	jwtToken, err := jwt.ParseWithClaims(
@@ -63,7 +70,8 @@ func ValidateAndReturn(token string) (jwt.RegisteredClaims, error) {
 		},
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("jwtToken LINE 67")
+		// log.Fatal(err)
 		return jwt.RegisteredClaims{}, err
 	}
 
@@ -87,6 +95,6 @@ func GetTokenFromHeader(r *http.Request) (string, error) {
 
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	fmt.Printf("\n\nRETRIEVED TOKEN: %v\n\n", token)
+	// fmt.Printf("\n\nRETRIEVED TOKEN: %v\n\n", token)
 	return token, nil
 }

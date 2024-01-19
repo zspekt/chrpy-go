@@ -78,6 +78,7 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	signedToken, err := jwtwrappers.CreateToken(jwtCfg)
+	fmt.Printf("\ncreated   token: %v\n", signedToken)
 	if err != nil {
 		log.Println("Error creating and signing token -> ", err)
 		return
@@ -95,15 +96,20 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := jwtwrappers.GetTokenFromHeader(r)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return
 	}
 
+	fmt.Printf("\nretrieved token: %v\n", token)
+
 	claims, err := jwtwrappers.ValidateAndReturn(token)
 	if err != nil {
-		log.Fatal(err)
+		// error is here
+		log.Println(err)
 		return
 	}
+
+	// unfinished code, obviously
 
 	fmt.Printf("\nPrinting claims...\n%v\t%v\t%v", claims.Issuer, claims.IssuedAt, claims.ExpiresAt)
 }
