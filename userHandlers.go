@@ -70,13 +70,28 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 	// we retrieve the password a
 	hashedPass := []byte(DBStruct.Users[requestedUserId].Password)
 
+	user := DBStruct.Users[requestedUserId]
+
 	err = bcrypt.CompareHashAndPassword(hashedPass, []byte(decdRequest.Password))
 	// nil if match
 	if err != nil {
+		log.Printf(
+			"Password -> %v for email -> %v doesn't match\n",
+			decdRequest.Password,
+			decdRequest.Email,
+		)
+		fmt.Printf(
+			"\nFrom request: <%v> <%v>\nFrom databse: <%v> <%v>",
+			decdRequest.Email,
+			decdRequest.Password,
+			user.Email,
+			user.Password,
+		)
 		respondWithError(w, 401, "Unauthorized access")
 		return
 	}
 
+	fmt.Printf("\n\nEXPIRES IN SECONDS -> %v\n\n", decdRequest.ExpiresInSeconds)
 	jwtCfg := &jwtwrappers.JWTRequestConfig{
 		UserID:           DBStruct.Users[requestedUserId].Id,
 		ExpiresInSeconds: decdRequest.ExpiresInSeconds,
@@ -108,6 +123,7 @@ func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := jwtwrappers.GetTokenFromHeader(r)
 	if err != nil {
 		log.Println(err)
+		respondWithError(w, 401, "Unauthorized access")
 		return
 	}
 
@@ -117,6 +133,7 @@ func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// error is here
 		log.Println(err)
+		respondWithError(w, 401, "Unauthorized access")
 		return
 	}
 
@@ -125,29 +142,38 @@ func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	dbStruct, err := db.LoadDB()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	userId, err := strconv.Atoi(claims.Subject)
 	if err != nil {
 		log.Fatalf("Error converting subject claim to int -> %v\n", err)
+		respondWithError(w, 401, "Unauthorized access")
 	}
 
-	if user, ok := dbStruct.Users[userId]; ok {
-		user.Email = decdRequest.Email
-		user.Password = decdRequest.Password
-		dbStruct.Users[user.Id] = user
-	} else {
-		log.Fatal("User not found when trying to update fields\n")
+	password, err := hashPassword(decdRequest.Password)
+	if err != nil {
+		log.Println("Error hashing password... ", err)
+		respondWithError(w, 401, "Unauthorized access")
+		return
 	}
 
-	fmt.Println(dbStruct.Users[userId])
+	user := database.User{
+		Id:       userId,
+		Email:    decdRequest.Email,
+		Password: password,
+	}
+
+	db.UpdateUserFields(user)
 
 	fmt.Printf(
 		"\nPrinting claims...\n ISSUER -> %v\n SUBJCT -> %v\n",
-		claims.Issuer,
-		claims.Subject,
+		claims.IssuedAt,
+		claims.ExpiresAt,
 	)
+
+	resp := userPostResp{
+		Id:    userId,
+		Email: user.Email,
+	}
+
+	respondWithJSON(w, 200, resp)
+	fmt.Println("DONE EXECUTING USERSEDITHANDLER")
 }

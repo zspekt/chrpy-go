@@ -1,7 +1,6 @@
 package database
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 )
@@ -72,28 +71,22 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 
  */
 
-func (db *DB) UpdateUserFields(replacement string, userId int) (struct{}, error) {
-	strct := User{}
+func (db *DB) UpdateUserFields(user User) error {
 	dbStruct := DBStructure{}
 
-	err := json.Unmarshal([]byte(replacement), &strct)
+	db.mutex.Lock()
+
+	dbStruct, err := db.LoadDB()
 	if err != nil {
-		log.Println("ERROR IN UpdateUserFields. RETURNING ERR FOR HANDLING...")
-		return struct{}{}, err
+		return err
 	}
 
-	dbStruct, err = db.LoadDB()
-	if err != nil {
-		log.Println(
-			"ERROR IN UpdateUserFields WHEN CALLING LOADDB. RETURNING ERROR FOR HANDLING...",
-		)
-		return struct{}{}, err
-	}
+	dbStruct.Users[user.Id] = user
 
-	fmt.Println(dbStruct)
-	// dbStruct.Users[string(userId)].Password = strct.Password
+	MarshalAndWrite(dbStruct, db.path)
 
-	return struct{}{}, nil
+	db.mutex.Unlock()
+	return nil
 }
 
 func GetUserID(userMap map[int]User, email string) (int, error) {

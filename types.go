@@ -12,7 +12,7 @@ type decodeUserPost struct {
 type decodeUserLogin struct {
 	Email            string `json:"email"`
 	Password         string `json:"password"`
-	ExpiresInSeconds int    `json:"expires_in_seonds"`
+	ExpiresInSeconds int    `json:"expires_in_seconds"`
 }
 
 type userPostResp struct {
