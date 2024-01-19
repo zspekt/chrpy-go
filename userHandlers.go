@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -54,16 +55,20 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	decodeJson(r.Body, &decdRequest)
 
-	requestedUser := decdRequest.Email
-
 	DBStruct, err := db.LoadDB()
 	if err != nil {
 		log.Printf("Error loading DB into memory --> %v\n", err)
 		return
 	}
 
+	requestedUserId, err := database.GetUserID(DBStruct.Users, decdRequest.Email)
+	if err != nil {
+		log.Fatalf("Error retrieving USERID in AUTH HANDLER FUNC -> %v\n", err)
+		return
+	}
+
 	// we retrieve the password a
-	hashedPass := []byte(DBStruct.Users[requestedUser].Password)
+	hashedPass := []byte(DBStruct.Users[requestedUserId].Password)
 
 	err = bcrypt.CompareHashAndPassword(hashedPass, []byte(decdRequest.Password))
 	// nil if match
@@ -73,7 +78,7 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jwtCfg := &jwtwrappers.JWTRequestConfig{
-		UserID:           DBStruct.Users[requestedUser].Id,
+		UserID:           DBStruct.Users[requestedUserId].Id,
 		ExpiresInSeconds: decdRequest.ExpiresInSeconds,
 	}
 
@@ -85,8 +90,8 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp = userLoginResp{
-		Id:    DBStruct.Users[requestedUser].Id,
-		Email: requestedUser,
+		Id:    requestedUserId,
+		Email: DBStruct.Users[requestedUserId].Email,
 		Token: signedToken,
 	}
 
@@ -94,6 +99,12 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersEditHandler(w http.ResponseWriter, r *http.Request) {
+	decdRequest := decodeUserPost{}
+
+	log.Println("\n\nRUNNING UserEditHandler\n\n")
+
+	decodeJson(r.Body, &decdRequest)
+
 	token, err := jwtwrappers.GetTokenFromHeader(r)
 	if err != nil {
 		log.Println(err)
@@ -109,7 +120,34 @@ func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// unfinished code, obviously
+	db, err := database.NewDB("./database.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	fmt.Printf("\nPrinting claims...\n%v\t%v\t%v", claims.Issuer, claims.IssuedAt, claims.ExpiresAt)
+	dbStruct, err := db.LoadDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	userId, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		log.Fatalf("Error converting subject claim to int -> %v\n", err)
+	}
+
+	if user, ok := dbStruct.Users[userId]; ok {
+		user.Email = decdRequest.Email
+		user.Password = decdRequest.Password
+		dbStruct.Users[user.Id] = user
+	} else {
+		log.Fatal("User not found when trying to update fields\n")
+	}
+
+	fmt.Println(dbStruct.Users[userId])
+
+	fmt.Printf(
+		"\nPrinting claims...\n ISSUER -> %v\n SUBJCT -> %v\n",
+		claims.Issuer,
+		claims.Subject,
+	)
 }
