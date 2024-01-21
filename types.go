@@ -10,9 +10,8 @@ type decodeUserPost struct {
 }
 
 type decodeUserLogin struct {
-	Email            string `json:"email"`
-	Password         string `json:"password"`
-	ExpiresInSeconds int    `json:"expires_in_seconds"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type userPostResp struct {
@@ -21,7 +20,12 @@ type userPostResp struct {
 }
 
 type userLoginResp struct {
-	Id    int    `json:"id"`
-	Email string `json:"email"`
+	Id           int    `json:"id"`
+	Email        string `json:"email"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type tokenResp struct {
 	Token string `json:"token"`
 }

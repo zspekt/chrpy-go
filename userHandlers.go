@@ -13,6 +13,9 @@ import (
 )
 
 func usersPostHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("\n\n\n")
+	log.Println("RUNNING usersPostHandler\n\n")
+
 	decdRequest := decodeUserLogin{}
 
 	db, err := database.NewDB("./database.json")
@@ -43,6 +46,9 @@ func usersPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("\n\n\n")
+	log.Println("RUNNING usersAuthHandler\n\n")
+
 	decdRequest := decodeUserLogin{}
 
 	resp := userLoginResp{}
@@ -91,38 +97,44 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("\n\nEXPIRES IN SECONDS -> %v\n\n", decdRequest.ExpiresInSeconds)
 	jwtCfg := &jwtwrappers.JWTRequestConfig{
-		UserID:           DBStruct.Users[requestedUserId].Id,
-		ExpiresInSeconds: decdRequest.ExpiresInSeconds,
+		UserID: DBStruct.Users[requestedUserId].Id,
 	}
 
-	signedToken, err := jwtwrappers.CreateToken(jwtCfg)
-	fmt.Printf("\ncreated   token: %v\n", signedToken)
+	signedAccessToken, signedRefreshToken, err := jwtwrappers.CreateAccessNdRefresh(jwtCfg)
 	if err != nil {
-		log.Println("Error creating and signing token -> ", err)
+		log.Println("Error creating and signing tokens -> ", err)
 		return
 	}
 
+	// signedToken, err := jwtwrappers.CreateToken(jwtCfg)
+	// fmt.Printf("\ncreated   token: %v\n", signedToken)
+	// if err != nil {
+	// 	log.Println("Error creating and signing token -> ", err)
+	// 	return
+	// }
+
 	resp = userLoginResp{
-		Id:    requestedUserId,
-		Email: DBStruct.Users[requestedUserId].Email,
-		Token: signedToken,
+		Id:           requestedUserId,
+		Email:        DBStruct.Users[requestedUserId].Email,
+		Token:        signedAccessToken,
+		RefreshToken: signedRefreshToken,
 	}
 
 	respondWithJSON(w, 200, resp)
 }
 
 func usersEditHandler(w http.ResponseWriter, r *http.Request) {
-	decdRequest := decodeUserPost{}
+	fmt.Print("\n\n\n")
+	log.Println("RUNNING UserEditHandler\n\n")
 
-	log.Println("\n\nRUNNING UserEditHandler\n\n")
+	decdRequest := decodeUserPost{}
 
 	decodeJson(r.Body, &decdRequest)
 
 	token, err := jwtwrappers.GetTokenFromHeader(r)
 	if err != nil {
-		log.Println(err)
+		log.Println("Error getting token from header -> %v\n", err)
 		respondWithError(w, 401, "Unauthorized access")
 		return
 	}
@@ -131,10 +143,15 @@ func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := jwtwrappers.ValidateAndReturn(token)
 	if err != nil {
-		// error is here
 		log.Println(err)
 		respondWithError(w, 401, "Unauthorized access")
 		return
+	}
+
+	// GetIssuer returns a string and an error
+	if claims.Issuer != "chirpy-access" {
+		log.Println("Refresh token being passed as access token. Rejecting request...")
+		respondWithError(w, 401, "Unauthorized access")
 	}
 
 	db, err := database.NewDB("./database.json")

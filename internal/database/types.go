@@ -1,6 +1,9 @@
 package database
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 type DB struct {
 	path  string
@@ -8,8 +11,9 @@ type DB struct {
 }
 
 type DBStructure struct {
-	Chirps map[int]Chirp `json:"chirps"`
-	Users  map[int]User  `json:"users"`
+	Chirps map[int]Chirp        `json:"chirps"`
+	Users  map[int]User         `json:"users"`
+	Tokens map[string]time.Time `json:"tokens"`
 }
 
 type User struct {

@@ -11,6 +11,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
+
+	"github.com/zspekt/chrpy-go/internal/database"
 )
 
 var jwtSecret string
@@ -26,17 +28,51 @@ func init() {
 	log.Println("jwtSecret has been set...")
 }
 
-func CreateToken(cfg *JWTRequestConfig) (string, error) {
-	if cfg.ExpiresInSeconds <= 0 {
-		cfg.ExpiresInSeconds = 86400
+func CreateAccessNdRefresh(cfg *JWTRequestConfig) (string, string, error) {
+	var (
+		accessToken  string
+		refreshToken string
+	)
+
+	cfg.TokenType = "access"
+
+	accessToken, err := CreateToken(cfg)
+	if err != nil {
+		log.Println(err)
+		return "", "", err
 	}
 
+	cfg.TokenType = "refresh"
+
+	refreshToken, err = CreateToken(cfg)
+	if err != nil {
+		log.Println(err)
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func CreateToken(cfg *JWTRequestConfig) (string, error) {
+	var expiresInSeconds int
+	var issuer string
+
+	switch cfg.TokenType {
+	case "access":
+		issuer = "chirpy-access"
+		expiresInSeconds = 3600
+		log.Println("Token is type access and expires in 3600 seconds")
+	case "refresh":
+		issuer = "chirpy-refresh"
+		expiresInSeconds = 5184000
+		log.Println("Token is type refresh and expires in 5184000 seconds")
+	}
+
+	// jwt token claims
 	var (
-		expires_in_seconds int       = cfg.ExpiresInSeconds
-		userId             int       = cfg.UserID
-		issuer             string    = "chirpy"
-		issuedAt           time.Time = time.Now().UTC()
-		expiresAt          time.Time = issuedAt.Add(time.Duration(expires_in_seconds) * time.Second)
+		userId    int       = cfg.UserID
+		issuedAt  time.Time = time.Now().UTC()
+		expiresAt time.Time = issuedAt.Add(time.Duration(expiresInSeconds) * time.Second)
 	)
 
 	fmt.Printf("\nissuedAt -> %v\nexpiresAt -> %v", issuedAt, expiresAt)
@@ -58,6 +94,7 @@ func CreateToken(cfg *JWTRequestConfig) (string, error) {
 	return signedToken, nil
 }
 
+// validates token and checks if it has been revoked. also returns token type
 func ValidateAndReturn(token string) (jwt.RegisteredClaims, error) {
 	// fmt.Println("jwtSecret right here -> ", jwtSecret)
 	claims := &jwt.RegisteredClaims{}
@@ -71,13 +108,29 @@ func ValidateAndReturn(token string) (jwt.RegisteredClaims, error) {
 	)
 	if err != nil {
 		log.Println("jwtToken LINE 67")
+		log.Println(token)
 		// log.Fatal(err)
 		return jwt.RegisteredClaims{}, err
 	}
 
 	if !jwtToken.Valid {
-		log.Fatalf("Token is not valid.\n")
-		// return jwt.RegisteredClaims{}, fmt.Errorf("Token is invalid")
+		log.Fatalf("Token is invalid.\n")
+		return jwt.RegisteredClaims{}, fmt.Errorf("Token is invalid")
+	}
+
+	db, err := database.NewDB("./database.json")
+	if err != nil {
+		log.Println(err)
+		return jwt.RegisteredClaims{}, err
+	}
+
+	isRevoked, err := db.IsRevoked(token)
+	if err != nil {
+		return jwt.RegisteredClaims{}, err
+	}
+	if isRevoked {
+		log.Println("Token is revoked...")
+		return jwt.RegisteredClaims{}, fmt.Errorf("Token is revoked")
 	}
 
 	return *claims, nil

@@ -47,10 +47,12 @@ func main() {
 	// user handlers
 	routerAPI.Post("/users", usersPostHandler)
 	routerAPI.Post("/login", usersAuthHandler)
-
 	routerAPI.Put("/users", usersEditHandler)
 
 	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
+
+	routerAPI.Post("/refresh", refreshPostHandler)
+	routerAPI.Post("/revoke", revokePostHandler)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
