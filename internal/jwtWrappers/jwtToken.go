@@ -94,7 +94,9 @@ func CreateToken(cfg *JWTRequestConfig) (string, error) {
 	return signedToken, nil
 }
 
-// validates token and checks if it has been revoked. also returns token type
+// validates token and checks if it has been revoked. also returns token type.
+// // no, it doesn't return token type. but one can easily get that from the claims.
+// what was i on?
 func ValidateAndReturn(token string) (jwt.RegisteredClaims, error) {
 	// fmt.Println("jwtSecret right here -> ", jwtSecret)
 	claims := &jwt.RegisteredClaims{}

@@ -11,9 +11,9 @@ type DB struct {
 }
 
 type DBStructure struct {
-	Chirps map[int]Chirp        `json:"chirps"`
-	Users  map[int]User         `json:"users"`
-	Tokens map[string]time.Time `json:"tokens"`
+	Chirps        map[int]Chirp        `json:"chirps"`
+	Users         map[int]User         `json:"users"`
+	RevokedTokens map[string]time.Time `json:"revoked_tokens"`
 }
 
 type User struct {
@@ -23,6 +23,7 @@ type User struct {
 }
 
 type Chirp struct {
-	Body string `json:"body"`
-	Id   int    `json:"id"`
+	Body     string `json:"body"`
+	ChirpId  int    `json:"id"`
+	AuthorId int    `json:"author_id"`
 }

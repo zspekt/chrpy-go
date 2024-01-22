@@ -21,11 +21,11 @@ func (db *DB) RevokeToken(token string) error {
 		return err
 	}
 
-	if DBStruct.Tokens == nil {
-		DBStruct.Tokens = make(map[string]time.Time)
+	if DBStruct.RevokedTokens == nil {
+		DBStruct.RevokedTokens = make(map[string]time.Time)
 	}
 
-	DBStruct.Tokens[token] = time.Now()
+	DBStruct.RevokedTokens[token] = time.Now()
 
 	err = MarshalAndWrite(DBStruct, db.path)
 	if err != nil {
@@ -49,7 +49,7 @@ func (db *DB) IsRevoked(token string) (bool, error) {
 		return true, err
 	}
 
-	tokens := DBStruct.Tokens
+	tokens := DBStruct.RevokedTokens
 
 	if _, ok := tokens[token]; ok {
 		log.Println("Token is revoked...")

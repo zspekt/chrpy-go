@@ -9,36 +9,70 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/zspekt/chrpy-go/internal/database"
+	jwtwrappers "github.com/zspekt/chrpy-go/internal/jwtWrappers"
 )
 
-// replaces provided curseWords with provided censored parameter of type string.
-// Returns a boolean indicating if there were any curseWords present
-func profaneCheck(str *string, curseWords []string, censored string) bool {
-	slice := strings.Split(*str, " ")
-	var cursedWordPresent bool
-
-	curseWordsMap := make(map[string]bool, len(curseWords))
-	for _, curse := range curseWords {
-		curseWordsMap[strings.ToLower(curse)] = true
+func chirpsDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	chirpID, err := strconv.Atoi(chi.URLParam(r, "*"))
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, 500, "Server error")
+		return
 	}
 
-	for i, v := range slice {
-		if curseWordsMap[strings.ToLower(v)] {
-			slice[i] = censored
-			cursedWordPresent = true
+	token, err := jwtwrappers.GetTokenFromHeader(r)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, 401, "Unauthorized access")
+		return
+	}
+
+	userID, err := validateAccess(token)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, 401, "Unauthorized access")
+		return
+	}
+
+	db, err := database.NewDB("./database.json")
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, 500, "Server error")
+		return
+	}
+
+	err = db.DeleteChirp(chirpID, userID)
+	if err != nil {
+		if err.Error() == "User trying to delete chirp from a different account" {
+			respondWithError(w, 403, "")
+			return
 		}
+		log.Fatal(err)
 	}
-
-	*str = strings.Join(slice, " ")
-	return cursedWordPresent
+	w.WriteHeader(200)
 }
 
 func chirpsPostHandler(w http.ResponseWriter, r *http.Request) {
 	decdRequest := decodeChirpPost{}
 
+	token, err := jwtwrappers.GetTokenFromHeader(r)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, 401, "Unauthorized access")
+		return
+	}
+
+	userID, err := validateAccess(token)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, 401, "Unauthorized access")
+		return
+	}
+
 	db, err := database.NewDB("./database.json")
 	if err != nil {
 		log.Println(err)
+		respondWithError(w, 500, "Server error")
 		return
 	}
 
@@ -56,7 +90,7 @@ func chirpsPostHandler(w http.ResponseWriter, r *http.Request) {
 	curseWords := []string{"kerfuffle", "sharbert", "fornax"}
 	profaneCheck(&decdRequest.Body, curseWords, "****")
 
-	chirp, err := db.CreateChirp(decdRequest.Body)
+	chirp, err := db.CreateChirp(decdRequest.Body, userID)
 	if err != nil {
 		log.Println(err)
 	}
@@ -103,4 +137,26 @@ func chirpsGetByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithError(w, 404, "404 Not found")
+}
+
+// replaces provided curseWords with provided censored parameter of type string.
+// Returns a boolean indicating if there were any curseWords present
+func profaneCheck(str *string, curseWords []string, censored string) bool {
+	slice := strings.Split(*str, " ")
+	var cursedWordPresent bool
+
+	curseWordsMap := make(map[string]bool, len(curseWords))
+	for _, curse := range curseWords {
+		curseWordsMap[strings.ToLower(curse)] = true
+	}
+
+	for i, v := range slice {
+		if curseWordsMap[strings.ToLower(v)] {
+			slice[i] = censored
+			cursedWordPresent = true
+		}
+	}
+
+	*str = strings.Join(slice, " ")
+	return cursedWordPresent
 }

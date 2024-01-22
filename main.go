@@ -43,6 +43,7 @@ func main() {
 	routerAPI.Get("/chirps", chirpsGetHandler)
 	routerAPI.Get("/chirps/*", chirpsGetByIDHandler)
 	routerAPI.Post("/chirps", chirpsPostHandler)
+	routerAPI.Delete("/chirps/*", chirpsDeleteHandler)
 
 	// user handlers
 	routerAPI.Post("/users", usersPostHandler)
