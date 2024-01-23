@@ -16,7 +16,7 @@ func UnmarshalToStruct[T any](structure *T, fPath string) error {
 	}
 
 	if !json.Valid(fileBytes) {
-		log.Println("\n", fPath, "does not contain valid JSON data.")
+		log.Println(fPath, "does not contain valid JSON data.")
 		return nil
 	}
 

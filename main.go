@@ -19,9 +19,11 @@ func main() {
 	router := chi.NewRouter()
 	routerAPI := chi.NewRouter()
 	routerAdmin := chi.NewRouter()
+	routerPolka := chi.NewRouter()
 
 	router.Mount("/api/", routerAPI)
 	router.Mount("/admin/", routerAdmin)
+	routerAPI.Mount("/polka/", routerPolka)
 
 	routerCors := middlewareCors(router)
 	// router.Handle(pattern string, handler http.Handler)
@@ -34,6 +36,8 @@ func main() {
 		"/app/*",
 		http.StripPrefix("/app", cfg.trackRequestWrapper(http.FileServer(http.Dir(filepathRoot)))),
 	)
+
+	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
 
 	routerAPI.HandleFunc("/reset", cfg.resetHandler)
 
@@ -50,10 +54,12 @@ func main() {
 	routerAPI.Post("/login", usersAuthHandler)
 	routerAPI.Put("/users", usersEditHandler)
 
-	routerAdmin.Get("/metrics", cfg.printRequestsHandler)
-
+	// auth handlers
 	routerAPI.Post("/refresh", refreshPostHandler)
 	routerAPI.Post("/revoke", revokePostHandler)
+
+	// polka webhooks
+	routerPolka.Post("/webhooks", polkaPostHandler)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

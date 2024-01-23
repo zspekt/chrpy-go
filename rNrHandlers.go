@@ -28,9 +28,7 @@ func refreshPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := jwtwrappers.ValidateAndReturn(token)
 	if err != nil {
-		fmt.Println("\n\n\n\n\nPUTOOOOOO\n\n\n\n\n\n")
 		log.Printf("Error on ValidateAndReturn -> %v\n", err)
-		fmt.Printf("Here is the token the error originates from < %v >\n", token)
 		respondWithError(w, 401, "Unauthorized access")
 		// log.Println()
 		return

@@ -75,7 +75,7 @@ func CreateToken(cfg *JWTRequestConfig) (string, error) {
 		expiresAt time.Time = issuedAt.Add(time.Duration(expiresInSeconds) * time.Second)
 	)
 
-	fmt.Printf("\nissuedAt -> %v\nexpiresAt -> %v", issuedAt, expiresAt)
+	// fmt.Printf("\nissuedAt -> %v\nexpiresAt -> %v", issuedAt, expiresAt)
 
 	claims := jwt.RegisteredClaims{
 		Issuer:    issuer,

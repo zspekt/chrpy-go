@@ -1,11 +1,55 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"log"
 )
 
 var UserIDCount int = 0
+
+func (db *DB) UpgradeUser(userID int) (User, error) {
+	DBStruct := DBStructure{}
+	userReturn := User{}
+
+	db.mutex.Lock()
+	defer db.mutex.Unlock()
+
+	DBStruct, err := db.LoadDB()
+	if err != nil {
+		log.Println(err)
+		return User{}, err
+	}
+
+	if DBStruct.Users == nil {
+		log.Println("Users map is nil")
+		return User{}, fmt.Errorf("Users map is nil")
+	}
+
+	var ok bool
+
+	// if user doesn't exist or has already upgraded...
+	if userReturn, ok = DBStruct.Users[userID]; !ok {
+		log.Println("User not in database")
+		return userReturn, errors.New("User does not exist in database")
+	}
+	if userReturn.IsChirpyRed {
+		log.Printf("User %v has already upgraded to Chirpy Red\n", userReturn.Id)
+		return userReturn, fmt.Errorf(
+			"User %v has already upgraded to Chirpy Red\n",
+			userReturn.Id,
+		)
+	}
+
+	userReturn.IsChirpyRed = true
+	DBStruct.Users[userID] = userReturn
+	err = MarshalAndWrite(DBStruct, db.path)
+	if err != nil {
+		log.Println(err)
+		return User{}, err
+	}
+	return userReturn, nil
+}
 
 func (db *DB) CreateUser(email string, password string) (User, error) {
 	DBStruct := DBStructure{}
@@ -15,6 +59,7 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	// locking access to the file so no one writes to it, or reads before
 	// we are done updating it
 	db.mutex.Lock()
+	defer db.mutex.Unlock()
 
 	err := UnmarshalToStruct[DBStructure](&DBStruct, db.path)
 	if err != nil {
@@ -25,9 +70,10 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	UserIDCount++
 
 	newUser := User{
-		Id:       UserIDCount,
-		Email:    email,
-		Password: password,
+		Id:          UserIDCount,
+		Email:       email,
+		Password:    password,
+		IsChirpyRed: false,
 	}
 
 	DBStruct.Users[UserIDCount] = newUser
@@ -43,7 +89,6 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 		return User{}, err
 	}
 
-	db.mutex.Unlock()
 	return newUser, nil
 }
 

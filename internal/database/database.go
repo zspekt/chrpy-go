@@ -16,7 +16,7 @@ func NewDB(path string) (*DB, error) {
 				log.Println(err)
 				return &DB{}, err
 			}
-			log.Printf("\tDB file %v did not exist. Creating it...\n", path)
+			log.Printf("DB file %v did not exist. Creating it...\n", path)
 		} else {
 			log.Println(err)
 			return &DB{}, err

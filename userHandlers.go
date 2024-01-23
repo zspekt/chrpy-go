@@ -38,8 +38,9 @@ func usersPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := userPostResp{
-		Id:    user.Id,
-		Email: user.Email,
+		Id:          user.Id,
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
 	}
 
 	respondWithJSON(w, 201, resp)
@@ -117,8 +118,10 @@ func usersAuthHandler(w http.ResponseWriter, r *http.Request) {
 	resp = userLoginResp{
 		Id:           requestedUserId,
 		Email:        DBStruct.Users[requestedUserId].Email,
+		IsChirpyRed:  DBStruct.Users[requestedUserId].IsChirpyRed,
 		Token:        signedAccessToken,
 		RefreshToken: signedRefreshToken,
+		// IsChirpyRed:  DBStruct.Users[requestedUserId].IsChirpyRed,
 	}
 
 	respondWithJSON(w, 200, resp)
@@ -180,11 +183,11 @@ func usersEditHandler(w http.ResponseWriter, r *http.Request) {
 
 	db.UpdateUserFields(user)
 
-	fmt.Printf(
-		"\nPrinting claims...\n ISSUER -> %v\n SUBJCT -> %v\n",
-		claims.IssuedAt,
-		claims.ExpiresAt,
-	)
+	// fmt.Printf(
+	// 	"\nPrinting claims...\n ISSUER -> %v\n SUBJCT -> %v\n",
+	// 	claims.IssuedAt,
+	// 	claims.ExpiresAt,
+	// )
 
 	resp := userPostResp{
 		Id:    userId,

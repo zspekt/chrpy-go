@@ -28,15 +28,6 @@ func (c *Config) resetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // displays what the request counter is currently at
-// func (c *Config) printRequestsHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-// 	w.WriteHeader(http.StatusOK)
-// 	num := strconv.Itoa(c.requestCounter)
-// 	str := "Hits: " + num
-// 	w.Write([]byte(str))
-// }
-
-// displays what the request counter is currently at
 func (c *Config) printRequestsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
