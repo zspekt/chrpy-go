@@ -8,18 +8,33 @@ import (
 
 var ChirpIDCount int = 0
 
-// GetChirps returns all chirps in the database
-func (db *DB) GetChirps() ([]Chirp, error) {
+// GetChirps returns all chirps belonging to the same author, if provided with
+// an authorID. Otherwise it simply returns all chirps. Sorts them in both cases.
+func (db *DB) GetChirps(authorID ...int) ([]Chirp, error) {
 	var chirpList []Chirp
 	DBStruct := DBStructure{}
 
-	// locking access to the file so no one writes to it, or reads before
-	// we are done updating it
+	log.Printf("Provided authorID -> %v\n", authorID)
+
 	db.mutex.Lock()
+	defer db.mutex.Unlock()
 
 	err := UnmarshalToStruct[DBStructure](&DBStruct, db.path)
 	if err != nil {
 		return []Chirp{}, err
+	}
+
+	// if provided an authorID...
+	if len(authorID) != 0 {
+		for _, chirp := range DBStruct.Chirps {
+			if chirp.AuthorId == authorID[0] {
+				chirpList = append(chirpList, chirp)
+			}
+			sort.Slice(chirpList, func(i, j int) bool {
+				return chirpList[i].ChirpId < chirpList[j].ChirpId
+			})
+		}
+		return chirpList, nil
 	}
 
 	for _, chirp := range DBStruct.Chirps {

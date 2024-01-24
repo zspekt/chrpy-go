@@ -98,13 +98,20 @@ func chirpsPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func chirpsGetHandler(w http.ResponseWriter, r *http.Request) {
+	queryParam := r.URL.Query().Get("author_id")
+
+	authorID, err := strconv.Atoi(queryParam)
+	if err != nil {
+		log.Println(err)
+	}
+
 	db, err := database.NewDB("./database.json")
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	chirps, err := db.GetChirps()
+	chirps, err := db.GetChirps(authorID)
 	if err != nil {
 		return
 	}
