@@ -98,9 +98,10 @@ func chirpsPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func chirpsGetHandler(w http.ResponseWriter, r *http.Request) {
-	queryParam := r.URL.Query().Get("author_id")
+	queryParam1 := r.URL.Query().Get("author_id")
+	queryParam2 := r.URL.Query().Get("sort")
 
-	authorID, err := strconv.Atoi(queryParam)
+	authorID, err := strconv.Atoi(queryParam1)
 	if err != nil {
 		log.Println(err)
 	}
@@ -111,7 +112,7 @@ func chirpsGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chirps, err := db.GetChirps(authorID)
+	chirps, err := db.GetChirps(queryParam2, authorID)
 	if err != nil {
 		return
 	}

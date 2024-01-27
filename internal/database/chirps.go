@@ -10,7 +10,7 @@ var ChirpIDCount int = 0
 
 // GetChirps returns all chirps belonging to the same author, if provided with
 // an authorID. Otherwise it simply returns all chirps. Sorts them in both cases.
-func (db *DB) GetChirps(authorID ...int) ([]Chirp, error) {
+func (db *DB) GetChirps(sorting string, authorID ...int) ([]Chirp, error) {
 	var chirpList []Chirp
 	DBStruct := DBStructure{}
 
@@ -25,7 +25,7 @@ func (db *DB) GetChirps(authorID ...int) ([]Chirp, error) {
 	}
 
 	// if provided an authorID...
-	if len(authorID) != 0 {
+	if len(authorID) != 0 && authorID[0] != 0 {
 		for _, chirp := range DBStruct.Chirps {
 			if chirp.AuthorId == authorID[0] {
 				chirpList = append(chirpList, chirp)
@@ -34,17 +34,24 @@ func (db *DB) GetChirps(authorID ...int) ([]Chirp, error) {
 				return chirpList[i].ChirpId < chirpList[j].ChirpId
 			})
 		}
-		return chirpList, nil
+	} else {
+		for _, chirp := range DBStruct.Chirps {
+			chirpList = append(chirpList, chirp)
+		}
 	}
 
-	for _, chirp := range DBStruct.Chirps {
-		chirpList = append(chirpList, chirp)
+	switch sorting {
+	case "desc":
+		sort.Slice(chirpList, func(i, j int) bool {
+			return chirpList[i].ChirpId > chirpList[j].ChirpId
+		})
+	default:
+		sort.Slice(chirpList, func(i, j int) bool {
+			return chirpList[i].ChirpId < chirpList[j].ChirpId
+		})
 	}
 
-	sort.Slice(chirpList, func(i, j int) bool {
-		return chirpList[i].ChirpId < chirpList[j].ChirpId
-	})
-
+	log.Println("\n\n\nFinished executing db.GetChirps()...")
 	return chirpList, nil
 }
 
